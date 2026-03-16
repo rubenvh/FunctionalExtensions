@@ -12,6 +12,11 @@ public static class Result
     public static Result<T> New<T>(T value, params PipelineMessage[] messages) => new(value, messages);
 
     /// <summary>
+    /// Creates a new successful Result with a pre-built message list (avoids array copy).
+    /// </summary>
+    internal static Result<T> New<T>(T value, IReadOnlyList<PipelineMessage> messages) => new(value, messages);
+
+    /// <summary>
     /// Creates an erroneous Result using a given Error object
     /// </summary>
     /// <param name="error">the error details</param>
@@ -413,7 +418,7 @@ public readonly struct Result<T>
     /// <summary>
     /// A collection of pipeline messages
     /// </summary>
-    public PipelineMessage[] Messages { get; } = Array.Empty<PipelineMessage>();
+    public IReadOnlyList<PipelineMessage> Messages { get; } = Array.Empty<PipelineMessage>();
 
     /// <summary>
     /// Determines if this result represents an erroneous value
@@ -462,24 +467,74 @@ public readonly struct Result<T>
     }
 
     /// <summary>
+    /// Constructs a successful Result using a pre-built message list (avoids array copy).
+    /// </summary>
+    internal Result(T value, IReadOnlyList<PipelineMessage> messages)
+    {
+        _isError = false;
+        Value = value;
+        Messages = messages;
+    }
+
+    /// <summary>
+    /// Constructs an error Result using a pre-built message list (avoids array copy).
+    /// </summary>
+    internal Result(Error error, IReadOnlyList<PipelineMessage> messages)
+    {
+        _isError = true;
+        Error = error;
+        Messages = messages;
+    }
+
+    /// <summary>
     /// Copy constructor for Result overriding the collection of pipeline messages 
     /// </summary>
     /// <param name="value"></param>
     /// <param name="messages"></param>
-    private Result(Result<T> value, params PipelineMessage[] messages)
+    private Result(Result<T> value, IReadOnlyList<PipelineMessage> messages)
     {
         _isError = value._isError;
-        Messages = messages ?? Array.Empty<PipelineMessage>();
+        Messages = messages;
         Value = value.Value;
         Error = value.Error;
     }
     
     /// <summary>
-    /// Prepends a collection of pipeline messages to the current Result
+    /// Prepends a collection of pipeline messages to the current Result.
+    /// Uses a single list allocation with pre-calculated capacity to avoid
+    /// O(N²) array copying when messages accumulate through a pipeline chain.
     /// </summary>
-    /// <param name="messages"></param>
-    /// <returns></returns>
-    public Result<T> WithMessages(params PipelineMessage[] messages) => new(this, (messages ?? Array.Empty<PipelineMessage>()).Concat(Messages ?? Array.Empty<PipelineMessage>()).ToArray());
+    /// <param name="messages">messages to prepend</param>
+    /// <returns>a new Result with the combined messages</returns>
+    public Result<T> WithMessages(params PipelineMessage[] messages)
+    {
+        var current = Messages ?? Array.Empty<PipelineMessage>();
+        if (messages is not { Length: > 0 }) return this;
+        if (current.Count == 0) return new(this, messages);
+
+        var combined = new List<PipelineMessage>(messages.Length + current.Count);
+        combined.AddRange(messages);
+        for (var i = 0; i < current.Count; i++)
+            combined.Add(current[i]);
+        return new(this, combined);
+    }
+
+    /// <summary>
+    /// Prepends a read-only list of pipeline messages to the current Result.
+    /// </summary>
+    internal Result<T> WithMessages(IReadOnlyList<PipelineMessage> messages)
+    {
+        var current = Messages ?? Array.Empty<PipelineMessage>();
+        if (messages is not { Count: > 0 }) return this;
+        if (current.Count == 0) return new(this, messages);
+
+        var combined = new List<PipelineMessage>(messages.Count + current.Count);
+        for (var i = 0; i < messages.Count; i++)
+            combined.Add(messages[i]);
+        for (var i = 0; i < current.Count; i++)
+            combined.Add(current[i]);
+        return new(this, combined);
+    }
   
 
     public override string ToString() =>

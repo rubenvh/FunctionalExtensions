@@ -14,11 +14,11 @@ public static class ResultEnumerableExtensions
     {
         var (prepared, pipelineMessages, errors) = ExtractResults(results);
         if (!errors.Any()) return (prepared, pipelineMessages);
-        if (errors.Length == 1) return new Result<IEnumerable<T>>(errors.Single(), pipelineMessages.ToArray());
+        if (errors.Length == 1) return new Result<IEnumerable<T>>(errors.Single(), pipelineMessages);
 
         var errorResult = Error.Create(errorIdentifier, errorMessage ?? "Multiple errors found, more information in the pipeline messages.");
 
-        return new Result<IEnumerable<T>>(errorResult, pipelineMessages.ToArray());
+        return new Result<IEnumerable<T>>(errorResult, pipelineMessages);
     }
 
     /// <summary>

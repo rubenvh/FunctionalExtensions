@@ -399,7 +399,7 @@ public class ResultTests
         Assert.That(result.MatchError(out var error), Is.True);
         Assert.That(error.ErrorIdentifier, Is.EqualTo(someError.ErrorIdentifier));
         Assert.That(error.ErrorMessage, Is.EqualTo("someMessage"));
-        Assert.That(result.Messages, Has.Length.EqualTo(3));
+        Assert.That(result.Messages, Has.Count.EqualTo(3));
         var messages = result.Messages.Select(m => m.Message).ToArray();
         Assert.That(messages, Does.Contain("cannot parse x"));
         Assert.That(messages, Does.Contain("cannot parse y"));
@@ -432,7 +432,7 @@ public class ResultTests
 
         Assert.That(result.MatchSuccess(out var sum), Is.True);
         Assert.That(sum, Is.EqualTo(11+22+33+55));
-        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages, Has.Count.EqualTo(1));
     }
     
     [Test]
@@ -447,7 +447,7 @@ public class ResultTests
 
         Assert.That(result.MatchSuccess(out var sum), Is.True);
         Assert.That(sum, Is.EqualTo(1+3+5));
-        Assert.That(result.Messages, Has.Length.EqualTo(3));
+        Assert.That(result.Messages, Has.Count.EqualTo(3));
     }
     
     [Test]
@@ -466,7 +466,7 @@ public class ResultTests
         Assert.That(result.MatchSuccess(out var parsedValues), Is.True);
         Assert.That(parsedValues, Is.Empty);
 
-        Assert.That(result.Messages, Has.Length.EqualTo(3));
+        Assert.That(result.Messages, Has.Count.EqualTo(3));
     }
     
     [Test]
@@ -481,7 +481,7 @@ public class ResultTests
 
         Assert.That(result.MatchSuccess(out var sum), Is.True);
         Assert.That(sum, Is.EqualTo(11+22+33+44+55));
-        Assert.That(result.Messages, Has.Length.EqualTo(0));
+        Assert.That(result.Messages, Has.Count.EqualTo(0));
     }
     
     [Test]
@@ -591,7 +591,7 @@ public class ResultTests
         var resultWithMessages = result.WithMessages(warning);
         
         Assert.That(resultWithMessages.MatchError(out _), Is.True);
-        Assert.That(resultWithMessages.Messages, Has.Length.EqualTo(1));
+        Assert.That(resultWithMessages.Messages, Has.Count.EqualTo(1));
     }
     
     [Test]
@@ -604,7 +604,7 @@ public class ResultTests
         
         Assert.That(resultWithMessages.MatchSuccess(out var v), Is.True);
         Assert.That(v, Is.EqualTo("hello"));
-        Assert.That(resultWithMessages.Messages, Has.Length.EqualTo(1));
+        Assert.That(resultWithMessages.Messages, Has.Count.EqualTo(1));
     }
     
     #endregion
@@ -690,7 +690,7 @@ public class ResultTests
         var msg = new PipelineMessage("v1", MessageLevel.Warning, "heads up");
         var error = Error.Create("ERR", "broke");
         var result = Result.Error<int>(error, msg).DoError(_ => { });
-        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages, Has.Count.EqualTo(1));
         Assert.That(result.Messages[0], Is.EqualTo(msg));
     }
 
@@ -733,7 +733,7 @@ public class ResultTests
         var result = Result.New(42).WithMessages(msg)
             .Ensure(v => v > 0, v => Error.Create("NEG", "nope"));
         Assert.That(result.MatchSuccess(out _), Is.True);
-        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages, Has.Count.EqualTo(1));
         Assert.That(result.Messages[0], Is.EqualTo(msg));
     }
 
@@ -744,7 +744,7 @@ public class ResultTests
         var result = Result.New(-1).WithMessages(msg)
             .Ensure(v => v > 0, v => Error.Create("NEG", "nope"));
         Assert.That(result.MatchError(out _), Is.True);
-        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages, Has.Count.EqualTo(1));
         Assert.That(result.Messages[0], Is.EqualTo(msg));
     }
 

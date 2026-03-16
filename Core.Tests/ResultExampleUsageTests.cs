@@ -43,6 +43,6 @@ public class ResultExampleUsageTests
 
         Assert.That(flattened.MatchSuccess(out var values), Is.True);
         Assert.That(values, Is.EquivalentTo(new[] {1,2}));
-        Assert.That(flattened.Messages.Length, Is.EqualTo(1));
+        Assert.That(flattened.Messages.Count, Is.EqualTo(1));
     }
 }

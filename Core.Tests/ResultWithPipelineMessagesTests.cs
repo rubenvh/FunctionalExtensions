@@ -19,7 +19,7 @@ public class ResultWithPipelineMessagesTests
             .Map(r => r.ToUpper())
             .Bind(r => DoubleString(r));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(0));
+        Assert.That(result.Messages.Count, Is.EqualTo(0));
         Assert.That(result.MatchSuccess(out var value), Is.True);
         Assert.That(value, Is.EqualTo("AAAA"));
     }
@@ -32,7 +32,7 @@ public class ResultWithPipelineMessagesTests
             .Map(r => r*2.1)
             .Map(r => r.ToString(CultureInfo.InvariantCulture));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(1));
+        Assert.That(result.Messages.Count, Is.EqualTo(1));
         Assert.That(result.Messages.Single().Id, Is.EqualTo("warning1"));
         Assert.That(result.MatchSuccess(out var value), Is.True);
         Assert.That(value, Is.EqualTo("23.1"));
@@ -47,7 +47,7 @@ public class ResultWithPipelineMessagesTests
             .Map(r => r*2.1)
             .Map(r => r.ToString(CultureInfo.InvariantCulture));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(2));
+        Assert.That(result.Messages.Count, Is.EqualTo(2));
         Assert.That(result.Messages.Single(v => v.Level == MessageLevel.Warning).Id, Is.EqualTo("warning1"));
         Assert.That(result.MatchError(out var _), Is.True);
     }
@@ -62,7 +62,7 @@ public class ResultWithPipelineMessagesTests
             .Map(r => r.ToString(CultureInfo.InvariantCulture))
             .MapError(e => Error.Create("mappedError", e.ErrorMessage)); // <-- ERROR IS MAPPED HERE
         
-        Assert.That(result.Messages.Length, Is.EqualTo(2));
+        Assert.That(result.Messages.Count, Is.EqualTo(2));
         Assert.That(result.Messages.Single(v => v.Level == MessageLevel.Warning).Id, Is.EqualTo("warning1"));
         Assert.That(result.MatchError(out var _), Is.True);
     }
@@ -74,7 +74,7 @@ public class ResultWithPipelineMessagesTests
             .Map(r => r.ToUpper())
             .Bind(r => DoubleString(r));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(1));
+        Assert.That(result.Messages.Count, Is.EqualTo(1));
         Assert.That(result.Messages.Single().Id, Is.EqualTo("warning1"));
         Assert.That(result.MatchSuccess(out var value), Is.True);
         Assert.That(value, Is.EqualTo("AAAA"));
@@ -87,7 +87,7 @@ public class ResultWithPipelineMessagesTests
             .Map(r => r.ToUpper())
             .Bind(r => DoubleString(r, warnings: new []{"warning2"}));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(2));
+        Assert.That(result.Messages.Count, Is.EqualTo(2));
         Assert.That(result.Messages.First().Id, Is.EqualTo("warning1"));
         Assert.That(result.Messages.Skip(1).First().Id, Is.EqualTo("warning2"));
         Assert.That(result.MatchSuccess(out var value), Is.True);
@@ -102,7 +102,7 @@ public class ResultWithPipelineMessagesTests
             .Bind(r => DoubleString(r, warnings: new []{"warning3"}))
             .Bind(r => DoubleString(r, warnings: new []{"warning4"}));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(4));
+        Assert.That(result.Messages.Count, Is.EqualTo(4));
         Assert.That(result.Messages.First().Id, Is.EqualTo("warning1"));
         Assert.That(result.Messages.Last().Id, Is.EqualTo("warning4"));
         Assert.That(result.MatchSuccess(out var value), Is.True);
@@ -117,7 +117,7 @@ public class ResultWithPipelineMessagesTests
             .Bind(r => DoubleString(r, warnings: new []{"warning3"}))
             .Bind(r => DoubleString(r, warnings: new []{"warning4"}));
         
-        Assert.That(result.Messages.Length, Is.EqualTo(3));
+        Assert.That(result.Messages.Count, Is.EqualTo(3));
         Assert.That(result.Messages.First().Id, Is.EqualTo("warning2"));
         Assert.That(result.Messages.Last().Id, Is.EqualTo("warning4"));
         Assert.That(result.MatchSuccess(out var value), Is.True);
@@ -134,7 +134,7 @@ public class ResultWithPipelineMessagesTests
             .FlattenResults(someError.ErrorIdentifier)
             .Map(x => x.Sum());
 
-        Assert.That(result.Messages.Length, Is.EqualTo(5));
+        Assert.That(result.Messages.Count, Is.EqualTo(5));
         Assert.That(result.Messages.First().Id, Is.EqualTo("warning1"));
         Assert.That(result.Messages.Last().Id, Is.EqualTo("warning5"));
         Assert.That(result.MatchSuccess(out var sum), Is.True);
