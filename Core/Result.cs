@@ -201,7 +201,43 @@ public static class Result
     /// <returns>a promise of <see cref="Result{T}"/></returns>
     public static async Task<Result<T>> Do<T>(this Task<Result<T>> result,
         Func<T, Task> action) => await (await result).Do(action);
-    
+
+    /// <summary>
+    /// Executes an action on the error value without modifying the Result.
+    /// Use this for side-effects on the error track (e.g., logging).
+    /// </summary>
+    /// <param name="result">the result on which to execute</param>
+    /// <param name="action">action that takes the result's error value</param>
+    /// <typeparam name="T">the type of the successful value</typeparam>
+    /// <returns>the unmodified result</returns>
+    public static Result<T> DoError<T>(this Result<T> result, Action<Error> action)
+    {
+        if (result.MatchError(out var error)) action(error);
+        return result;
+    }
+
+    /// <summary>
+    /// Async DoError: sync Result, async action.
+    /// </summary>
+    public static async Task<Result<T>> DoError<T>(this Result<T> result,
+        Func<Error, Task> action)
+    {
+        if (result.MatchError(out var error)) await action(error);
+        return result;
+    }
+
+    /// <summary>
+    /// Async DoError: async Result, sync action.
+    /// </summary>
+    public static async Task<Result<T>> DoError<T>(this Task<Result<T>> result,
+        Action<Error> action) => (await result).DoError(action);
+
+    /// <summary>
+    /// Async DoError: async Result, async action.
+    /// </summary>
+    public static async Task<Result<T>> DoError<T>(this Task<Result<T>> result,
+        Func<Error, Task> action) => await (await result).DoError(action);
+
     /// <summary>
     /// Binds a function over a Result. Note that this function won't do anything on an erroneous Result.
     /// The difference with <see cref="Map{T,TResult}(FluentSolidity.FunctionalExtensions.Result{T},System.Func{T,TResult})"/>

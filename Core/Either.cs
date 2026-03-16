@@ -182,6 +182,42 @@ public static class Either
 
     #endregion
 
+    #region DoLeft
+
+    /// <summary>
+    /// Executes an action on the left value without modifying the Either.
+    /// Use this for side-effects on the left track (e.g., logging errors).
+    /// </summary>
+    public static Either<TLeft, TRight> DoLeft<TLeft, TRight>(this Either<TLeft, TRight> either, Action<TLeft> action)
+    {
+        if (either.MatchLeft(out var left)) action(left);
+        return either;
+    }
+
+    /// <summary>
+    /// Async DoLeft: sync Either, async action.
+    /// </summary>
+    public static async Task<Either<TLeft, TRight>> DoLeft<TLeft, TRight>(this Either<TLeft, TRight> either,
+        Func<TLeft, Task> action)
+    {
+        if (either.MatchLeft(out var left)) await action(left);
+        return either;
+    }
+
+    /// <summary>
+    /// Async DoLeft: async Either, sync action.
+    /// </summary>
+    public static async Task<Either<TLeft, TRight>> DoLeft<TLeft, TRight>(this Task<Either<TLeft, TRight>> either,
+        Action<TLeft> action) => (await either).DoLeft(action);
+
+    /// <summary>
+    /// Async DoLeft: async Either, async action.
+    /// </summary>
+    public static async Task<Either<TLeft, TRight>> DoLeft<TLeft, TRight>(this Task<Either<TLeft, TRight>> either,
+        Func<TLeft, Task> action) => await (await either).DoLeft(action);
+
+    #endregion
+
     #region Support async query syntax
 
     public static async Task<Either<TLeft, TResult>> Select<TLeft, TRight, TResult>(
