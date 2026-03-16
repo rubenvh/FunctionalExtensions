@@ -218,6 +218,43 @@ public static class Either
 
     #endregion
 
+    #region Ensure
+
+    /// <summary>
+    /// Guards a right Either by testing its value against a predicate.
+    /// If the predicate returns true, the Either passes through unchanged.
+    /// If the predicate returns false, the Either is flipped to a left using the provided factory.
+    /// Short-circuits on an already left Either.
+    /// </summary>
+    public static Either<TLeft, TRight> Ensure<TLeft, TRight>(this Either<TLeft, TRight> either,
+        Func<TRight, bool> predicate, Func<TRight, TLeft> leftFactory) =>
+        either.MatchRight(out var right)
+            ? predicate(right) ? either : Either<TLeft, TRight>.Left(leftFactory(right))
+            : either;
+
+    /// <summary>
+    /// Async Ensure: sync Either, async predicate.
+    /// </summary>
+    public static async Task<Either<TLeft, TRight>> Ensure<TLeft, TRight>(this Either<TLeft, TRight> either,
+        Func<TRight, Task<bool>> predicate, Func<TRight, TLeft> leftFactory) =>
+        either.MatchRight(out var right)
+            ? await predicate(right) ? either : Either<TLeft, TRight>.Left(leftFactory(right))
+            : either;
+
+    /// <summary>
+    /// Async Ensure: async Either, sync predicate.
+    /// </summary>
+    public static async Task<Either<TLeft, TRight>> Ensure<TLeft, TRight>(this Task<Either<TLeft, TRight>> either,
+        Func<TRight, bool> predicate, Func<TRight, TLeft> leftFactory) => (await either).Ensure(predicate, leftFactory);
+
+    /// <summary>
+    /// Async Ensure: async Either, async predicate.
+    /// </summary>
+    public static async Task<Either<TLeft, TRight>> Ensure<TLeft, TRight>(this Task<Either<TLeft, TRight>> either,
+        Func<TRight, Task<bool>> predicate, Func<TRight, TLeft> leftFactory) => await (await either).Ensure(predicate, leftFactory);
+
+    #endregion
+
     #region Support async query syntax
 
     public static async Task<Either<TLeft, TResult>> Select<TLeft, TRight, TResult>(

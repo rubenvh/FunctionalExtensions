@@ -320,6 +320,44 @@ public static class Result
         Func<Error, Error> errorMapper) => (await result).MapError(errorMapper);
     
     
+    /// <summary>
+    /// Guards a successful Result by testing its value against a predicate.
+    /// If the predicate returns true, the Result passes through unchanged.
+    /// If the predicate returns false, the Result is flipped to an error using the provided error factory.
+    /// Short-circuits on an already erroneous Result.
+    /// </summary>
+    /// <param name="result">the result to guard</param>
+    /// <param name="predicate">a predicate that must hold for the value</param>
+    /// <param name="errorFactory">a factory producing an Error when the predicate fails</param>
+    /// <typeparam name="T">type of the successful value</typeparam>
+    /// <returns>the original result if the predicate holds, otherwise an error result</returns>
+    public static Result<T> Ensure<T>(this Result<T> result, Func<T, bool> predicate, Func<T, Error> errorFactory) =>
+        result.MatchSuccess(out var value)
+            ? predicate(value) ? result : new Result<T>(errorFactory(value), result.ValidationMessages)
+            : result;
+
+    /// <summary>
+    /// Async Ensure: sync Result, async predicate.
+    /// </summary>
+    public static async Task<Result<T>> Ensure<T>(this Result<T> result,
+        Func<T, Task<bool>> predicate, Func<T, Error> errorFactory) =>
+        result.MatchSuccess(out var value)
+            ? await predicate(value) ? result : new Result<T>(errorFactory(value), result.ValidationMessages)
+            : result;
+
+    /// <summary>
+    /// Async Ensure: async Result, sync predicate.
+    /// </summary>
+    public static async Task<Result<T>> Ensure<T>(this Task<Result<T>> result,
+        Func<T, bool> predicate, Func<T, Error> errorFactory) => (await result).Ensure(predicate, errorFactory);
+
+    /// <summary>
+    /// Async Ensure: async Result, async predicate.
+    /// </summary>
+    public static async Task<Result<T>> Ensure<T>(this Task<Result<T>> result,
+        Func<T, Task<bool>> predicate, Func<T, Error> errorFactory) => await (await result).Ensure(predicate, errorFactory);
+
+
     #region Support async query syntax
 
     public static async Task<Result<TResult>> Select<T, TResult>(this Result<T> result, Func<T, Task<TResult>> mapper) => await result.Map(mapper);
