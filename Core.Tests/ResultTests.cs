@@ -399,8 +399,8 @@ public class ResultTests
         Assert.That(result.MatchError(out var error), Is.True);
         Assert.That(error.ErrorIdentifier, Is.EqualTo(someError.ErrorIdentifier));
         Assert.That(error.ErrorMessage, Is.EqualTo("someMessage"));
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(3));
-        var messages = result.ValidationMessages.Select(m => m.Message).ToArray();
+        Assert.That(result.Messages, Has.Length.EqualTo(3));
+        var messages = result.Messages.Select(m => m.Message).ToArray();
         Assert.That(messages, Does.Contain("cannot parse x"));
         Assert.That(messages, Does.Contain("cannot parse y"));
         Assert.That(messages, Does.Contain("cannot parse z"));
@@ -432,7 +432,7 @@ public class ResultTests
 
         Assert.That(result.MatchSuccess(out var sum), Is.True);
         Assert.That(sum, Is.EqualTo(11+22+33+55));
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages, Has.Length.EqualTo(1));
     }
     
     [Test]
@@ -447,7 +447,7 @@ public class ResultTests
 
         Assert.That(result.MatchSuccess(out var sum), Is.True);
         Assert.That(sum, Is.EqualTo(1+3+5));
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(3));
+        Assert.That(result.Messages, Has.Length.EqualTo(3));
     }
     
     [Test]
@@ -466,7 +466,7 @@ public class ResultTests
         Assert.That(result.MatchSuccess(out var parsedValues), Is.True);
         Assert.That(parsedValues, Is.Empty);
 
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(3));
+        Assert.That(result.Messages, Has.Length.EqualTo(3));
     }
     
     [Test]
@@ -481,7 +481,7 @@ public class ResultTests
 
         Assert.That(result.MatchSuccess(out var sum), Is.True);
         Assert.That(sum, Is.EqualTo(11+22+33+44+55));
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(0));
+        Assert.That(result.Messages, Has.Length.EqualTo(0));
     }
     
     [Test]
@@ -586,25 +586,25 @@ public class ResultTests
     {
         var error = Error.Create("test", "msg");
         var result = new Result<string>(error);
-        var warning = new ValidationMessage("w1", ValidationLevel.Warning, "warn");
+        var warning = new PipelineMessage("w1", MessageLevel.Warning, "warn");
         
-        var resultWithMessages = result.WithValidationMessages(warning);
+        var resultWithMessages = result.WithMessages(warning);
         
         Assert.That(resultWithMessages.MatchError(out _), Is.True);
-        Assert.That(resultWithMessages.ValidationMessages, Has.Length.EqualTo(1));
+        Assert.That(resultWithMessages.Messages, Has.Length.EqualTo(1));
     }
     
     [Test]
     public void with_validation_messages_preserves_success_state()
     {
         var result = Result.New("hello");
-        var warning = new ValidationMessage("w1", ValidationLevel.Warning, "warn");
+        var warning = new PipelineMessage("w1", MessageLevel.Warning, "warn");
         
-        var resultWithMessages = result.WithValidationMessages(warning);
+        var resultWithMessages = result.WithMessages(warning);
         
         Assert.That(resultWithMessages.MatchSuccess(out var v), Is.True);
         Assert.That(v, Is.EqualTo("hello"));
-        Assert.That(resultWithMessages.ValidationMessages, Has.Length.EqualTo(1));
+        Assert.That(resultWithMessages.Messages, Has.Length.EqualTo(1));
     }
     
     #endregion
@@ -687,11 +687,11 @@ public class ResultTests
     [Test]
     public void doerror_preserves_validation_messages()
     {
-        var msg = new ValidationMessage("v1", ValidationLevel.Warning, "heads up");
+        var msg = new PipelineMessage("v1", MessageLevel.Warning, "heads up");
         var error = Error.Create("ERR", "broke");
         var result = Result.Error<int>(error, msg).DoError(_ => { });
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(1));
-        Assert.That(result.ValidationMessages[0], Is.EqualTo(msg));
+        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages[0], Is.EqualTo(msg));
     }
 
     #endregion
@@ -729,23 +729,23 @@ public class ResultTests
     [Test]
     public void ensure_preserves_validation_messages_on_pass()
     {
-        var msg = new ValidationMessage("v1", ValidationLevel.Info, "info");
-        var result = Result.New(42).WithValidationMessages(msg)
+        var msg = new PipelineMessage("v1", MessageLevel.Info, "info");
+        var result = Result.New(42).WithMessages(msg)
             .Ensure(v => v > 0, v => Error.Create("NEG", "nope"));
         Assert.That(result.MatchSuccess(out _), Is.True);
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(1));
-        Assert.That(result.ValidationMessages[0], Is.EqualTo(msg));
+        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages[0], Is.EqualTo(msg));
     }
 
     [Test]
     public void ensure_preserves_validation_messages_on_fail()
     {
-        var msg = new ValidationMessage("v1", ValidationLevel.Info, "info");
-        var result = Result.New(-1).WithValidationMessages(msg)
+        var msg = new PipelineMessage("v1", MessageLevel.Info, "info");
+        var result = Result.New(-1).WithMessages(msg)
             .Ensure(v => v > 0, v => Error.Create("NEG", "nope"));
         Assert.That(result.MatchError(out _), Is.True);
-        Assert.That(result.ValidationMessages, Has.Length.EqualTo(1));
-        Assert.That(result.ValidationMessages[0], Is.EqualTo(msg));
+        Assert.That(result.Messages, Has.Length.EqualTo(1));
+        Assert.That(result.Messages[0], Is.EqualTo(msg));
     }
 
     [Test]

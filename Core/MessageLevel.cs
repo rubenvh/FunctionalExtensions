@@ -1,6 +1,6 @@
 namespace FluentSolidity.FunctionalExtensions;
 
-public enum ValidationLevel
+public enum MessageLevel
 {
     Info,
     Warning,

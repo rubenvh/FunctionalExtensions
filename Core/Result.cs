@@ -6,19 +6,19 @@ public static class Result
     /// Creates a new successful Result using a given value 
     /// </summary>
     /// <param name="value">successful value</param>
-    /// <param name="messages">an optional collection of validation messages</param>
+    /// <param name="messages">an optional collection of pipeline messages</param>
     /// <typeparam name="T">type of value</typeparam>
     /// <returns></returns>
-    public static Result<T> New<T>(T value, params ValidationMessage[] messages) => new(value, messages);
+    public static Result<T> New<T>(T value, params PipelineMessage[] messages) => new(value, messages);
 
     /// <summary>
     /// Creates an erroneous Result using a given Error object
     /// </summary>
     /// <param name="error">the error details</param>
-    /// <param name="messages">an optional collection of validation messages</param>
+    /// <param name="messages">an optional collection of pipeline messages</param>
     /// <typeparam name="T">would be type of the successful value</typeparam>
     /// <returns></returns>
-    public static Result<T> Error<T>(Error error, params ValidationMessage[] messages) => new(error, messages);
+    public static Result<T> Error<T>(Error error, params PipelineMessage[] messages) => new(error, messages);
 
     /// <summary>
     /// Collapses a Result that can be successful or erroneous to a single value by providing a mapper lambda for
@@ -91,8 +91,8 @@ public static class Result
     /// <returns>a mapped result</returns>
     public static Result<TResult> Map<T, TResult>(this Result<T> result, Func<T, TResult> mapper) =>
         result.MatchError(out var error)
-            ? new Result<TResult>(error, result.ValidationMessages)
-            : New(mapper(result.Value!), result.ValidationMessages);
+            ? new Result<TResult>(error, result.Messages)
+            : New(mapper(result.Value!), result.Messages);
 
     /// <summary>
     /// Asynchronous version of <see cref="Map{T,TResult}(FluentSolidity.FunctionalExtensions.Result{T},System.Func{T,TResult})"/>
@@ -106,8 +106,8 @@ public static class Result
     public static async Task<Result<TResult>> Map<T, TResult>(this Result<T> result,
         Func<T, Task<TResult>> mapper) =>
         result.MatchError(out var error)
-            ? new Result<TResult>(error, result.ValidationMessages)
-            : new Result<TResult>(await mapper(result.Value!), result.ValidationMessages);
+            ? new Result<TResult>(error, result.Messages)
+            : new Result<TResult>(await mapper(result.Value!), result.Messages);
 
     /// <summary>
     /// Asynchronous version of <see cref="Map{T,TResult}(FluentSolidity.FunctionalExtensions.Result{T},System.Func{T,TResult})"/>
@@ -253,8 +253,8 @@ public static class Result
     /// <returns>a mapped result</returns>
     public static Result<TResult> Bind<T, TResult>(this Result<T> result, Func<T, Result<TResult>> mapper) =>
         result.MatchError(out var error)
-            ? new Result<TResult>(error, result.ValidationMessages)
-            : mapper(result.Value!).WithValidationMessages(result.ValidationMessages);
+            ? new Result<TResult>(error, result.Messages)
+            : mapper(result.Value!).WithMessages(result.Messages);
 
     /// <summary>
     /// Asynchronous version of <see cref="Bind{T,TResult}(FluentSolidity.FunctionalExtensions.Result{T},System.Func{T,FluentSolidity.FunctionalExtensions.Result{TResult}})"/>
@@ -268,8 +268,8 @@ public static class Result
     public static async Task<Result<TResult>> Bind<T, TResult>(this Result<T> result,
         Func<T, Task<Result<TResult>>> mapper) =>
         result.MatchError(out var error)
-            ? new Result<TResult>(error, result.ValidationMessages)
-            : (await mapper(result.Value!)).WithValidationMessages(result.ValidationMessages);
+            ? new Result<TResult>(error, result.Messages)
+            : (await mapper(result.Value!)).WithMessages(result.Messages);
 
     /// <summary>
     /// Asynchronous version of <see cref="Bind{T,TResult}(FluentSolidity.FunctionalExtensions.Result{T},System.Func{T,FluentSolidity.FunctionalExtensions.Result{TResult}})"/>
@@ -305,7 +305,7 @@ public static class Result
     /// <returns>either an unmodified result or a result containing a mapped error</returns>
     public static Result<T> MapError<T>(this Result<T> result, Func<Error, Error> errorMapper) =>
         result.MatchError(out var error)
-            ? new Result<T>(errorMapper(error), result.ValidationMessages)
+            ? new Result<T>(errorMapper(error), result.Messages)
             : result;
 
     /// <summary>
@@ -333,7 +333,7 @@ public static class Result
     /// <returns>the original result if the predicate holds, otherwise an error result</returns>
     public static Result<T> Ensure<T>(this Result<T> result, Func<T, bool> predicate, Func<T, Error> errorFactory) =>
         result.MatchSuccess(out var value)
-            ? predicate(value) ? result : new Result<T>(errorFactory(value), result.ValidationMessages)
+            ? predicate(value) ? result : new Result<T>(errorFactory(value), result.Messages)
             : result;
 
     /// <summary>
@@ -342,7 +342,7 @@ public static class Result
     public static async Task<Result<T>> Ensure<T>(this Result<T> result,
         Func<T, Task<bool>> predicate, Func<T, Error> errorFactory) =>
         result.MatchSuccess(out var value)
-            ? await predicate(value) ? result : new Result<T>(errorFactory(value), result.ValidationMessages)
+            ? await predicate(value) ? result : new Result<T>(errorFactory(value), result.Messages)
             : result;
 
     /// <summary>
@@ -411,9 +411,9 @@ public readonly struct Result<T>
     public Error? Error { get; } = null;
 
     /// <summary>
-    /// A collection of validation messages
+    /// A collection of pipeline messages
     /// </summary>
-    public ValidationMessage[] ValidationMessages { get; } = Array.Empty<ValidationMessage>();
+    public PipelineMessage[] Messages { get; } = Array.Empty<PipelineMessage>();
 
     /// <summary>
     /// Determines if this result represents an erroneous value
@@ -441,54 +441,54 @@ public readonly struct Result<T>
     /// constructs a Result using a successful value 
     /// </summary>
     /// <param name="value"></param>
-    /// <param name="messages">an optional collection of validation messages</param>
-    public Result(T value, params ValidationMessage[] messages)
+    /// <param name="messages">an optional collection of pipeline messages</param>
+    public Result(T value, params PipelineMessage[] messages)
     {
         _isError = false;
         Value = value;
-        ValidationMessages = messages ?? Array.Empty<ValidationMessage>();
+        Messages = messages ?? Array.Empty<PipelineMessage>();
     }
 
     /// <summary>
     /// Constructs a Result using an erroneous value
     /// </summary>
     /// <param name="error"></param>
-    /// <param name="messages">an optional collection of validation messages</param>
-    public Result(Error error, params ValidationMessage[] messages)
+    /// <param name="messages">an optional collection of pipeline messages</param>
+    public Result(Error error, params PipelineMessage[] messages)
     {
         _isError = true;
         Error = error;
-        ValidationMessages = messages ?? Array.Empty<ValidationMessage>();
+        Messages = messages ?? Array.Empty<PipelineMessage>();
     }
 
     /// <summary>
-    /// Copy constructor for Result overriding the collection of validation messages 
+    /// Copy constructor for Result overriding the collection of pipeline messages 
     /// </summary>
     /// <param name="value"></param>
     /// <param name="messages"></param>
-    private Result(Result<T> value, params ValidationMessage[] messages)
+    private Result(Result<T> value, params PipelineMessage[] messages)
     {
         _isError = value._isError;
-        ValidationMessages = messages ?? Array.Empty<ValidationMessage>();
+        Messages = messages ?? Array.Empty<PipelineMessage>();
         Value = value.Value;
         Error = value.Error;
     }
     
     /// <summary>
-    /// Prepends a collection of validation messages to the current Result
+    /// Prepends a collection of pipeline messages to the current Result
     /// </summary>
     /// <param name="messages"></param>
     /// <returns></returns>
-    public Result<T> WithValidationMessages(params ValidationMessage[] messages) => new(this, (messages ?? Array.Empty<ValidationMessage>()).Concat(ValidationMessages ?? Array.Empty<ValidationMessage>()).ToArray());
+    public Result<T> WithMessages(params PipelineMessage[] messages) => new(this, (messages ?? Array.Empty<PipelineMessage>()).Concat(Messages ?? Array.Empty<PipelineMessage>()).ToArray());
   
 
     public override string ToString() =>
         _isError ? $"Error({Error!.ErrorIdentifier}: {Error.ErrorMessage})" : $"Success({Value})";
 
-    public static implicit operator Result<T>(Error e) => (new Result<T>(e)).WithValidationMessages(e.ToValidationMessage());
+    public static implicit operator Result<T>(Error e) => (new Result<T>(e)).WithMessages(e.ToPipelineMessage());
     public static implicit operator Result<T>(T v) => new(v);
-    public static implicit operator Result<T>((T v, ValidationMessage[] m) _) => new(_.v, _.m);
-    public static implicit operator Result<T>((T v, List<ValidationMessage> m) _) => (_.v, _.m.ToArray());
+    public static implicit operator Result<T>((T v, PipelineMessage[] m) _) => new(_.v, _.m);
+    public static implicit operator Result<T>((T v, List<PipelineMessage> m) _) => (_.v, _.m.ToArray());
 
     #region Support query syntax
 

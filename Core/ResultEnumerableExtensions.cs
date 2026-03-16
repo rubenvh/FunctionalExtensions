@@ -12,13 +12,13 @@ public static class ResultEnumerableExtensions
     /// <returns>an error result when any of the result instances is in error state; a successful result when all of the result instances are in a success state.</returns>
     public static Result<IEnumerable<T>> FlattenResults<T>( this IEnumerable<Result<T>> results, string errorIdentifier = "AggregatedError", string? errorMessage = null)
     {
-        var (prepared, validationMessages, errors) = ExtractResults(results);
-        if (!errors.Any()) return (prepared, validationMessages);
-        if (errors.Length == 1) return new Result<IEnumerable<T>>(errors.Single(), validationMessages.ToArray());
+        var (prepared, pipelineMessages, errors) = ExtractResults(results);
+        if (!errors.Any()) return (prepared, pipelineMessages);
+        if (errors.Length == 1) return new Result<IEnumerable<T>>(errors.Single(), pipelineMessages.ToArray());
 
-        var errorResult = Error.Create(errorIdentifier, errorMessage ?? "Multiple errors found, more information in the validation messages.");
+        var errorResult = Error.Create(errorIdentifier, errorMessage ?? "Multiple errors found, more information in the pipeline messages.");
 
-        return new Result<IEnumerable<T>>(errorResult, validationMessages.ToArray());
+        return new Result<IEnumerable<T>>(errorResult, pipelineMessages.ToArray());
     }
 
     /// <summary>
@@ -33,8 +33,8 @@ public static class ResultEnumerableExtensions
         results.FlattenResults( errorIdentifier, messagePrefix ).Map(x => x.SelectMany(y => y  ));
     
     /// <summary>
-    /// Takes an IEnumerable of Results and returns a Result of IEnumerable where any error will be added as a validation message
-    /// Note that if all results are in error state, the result will be an empty collection with the errors as validation messages
+    /// Takes an IEnumerable of Results and returns a Result of IEnumerable where any error will be added as a pipeline message
+    /// Note that if all results are in error state, the result will be an empty collection with the errors as pipeline messages
     /// </summary>
     /// <param name="results">The list of Result instances</param>
     /// <typeparam name="T">type of the entity inside the Result container</typeparam>
@@ -46,14 +46,14 @@ public static class ResultEnumerableExtensions
         return new Result<IEnumerable<T>>(successes, messages);
     }
     
-    private static (List<T> successes, ValidationMessage[] messages, Error[] errors) ExtractResults<T>(IEnumerable<Result<T>> results)
+    private static (List<T> successes, PipelineMessage[] messages, Error[] errors) ExtractResults<T>(IEnumerable<Result<T>> results)
     {
-        var validationMessages = new Dictionary<string, ValidationMessage>();
+        var pipelineMessages = new Dictionary<string, PipelineMessage>();
         var successes = new List<T>();
         var errors = new List<Error>();
         foreach( var result in results )
         {
-            foreach (var m in result.ValidationMessages) AddMessage(m);
+            foreach (var m in result.Messages) AddMessage(m);
             result.Match( r =>
                 {
                     successes.Add(r );
@@ -62,18 +62,18 @@ public static class ResultEnumerableExtensions
                 error =>
                 {
                     errors.Add(error);
-                    AddMessage(error.ToValidationMessage());
+                    AddMessage(error.ToPipelineMessage());
                     return false;
                 });
         }
-        return (successes, validationMessages.Values.ToArray(), errors.ToArray());
+        return (successes, pipelineMessages.Values.ToArray(), errors.ToArray());
 
-        void AddMessage(ValidationMessage m)
+        void AddMessage(PipelineMessage m)
         {
             var key = $"{m.Level}{m.Id}{m.Context}{m.Message}";
-            if (!validationMessages.ContainsKey(key))
+            if (!pipelineMessages.ContainsKey(key))
             {
-                validationMessages[key] = m;
+                pipelineMessages[key] = m;
             }
         }
     }

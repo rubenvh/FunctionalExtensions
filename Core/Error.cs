@@ -12,5 +12,5 @@ public record Error(string ErrorIdentifier, string ErrorMessage, string? Context
     public static Error Create(string identifier, string message) => new(identifier, message);
     public static Error Create(string identifier, string message, string? context) => new(identifier, message, context);
 
-    public ValidationMessage ToValidationMessage() => new(ErrorIdentifier, ValidationLevel.Error, ErrorMessage, Context);
+    public PipelineMessage ToPipelineMessage() => new(ErrorIdentifier, MessageLevel.Error, ErrorMessage, Context);
 }
