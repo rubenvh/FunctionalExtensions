@@ -608,4 +608,29 @@ public class ResultTests
     }
     
     #endregion
+
+    #region ToString
+
+    [Test]
+    public void tostring_success_shows_value()
+    {
+        var result = Result.New(42);
+        Assert.That(result.ToString(), Is.EqualTo("Success(42)"));
+    }
+
+    [Test]
+    public void tostring_error_shows_identifier_and_message()
+    {
+        var result = Result.Error<int>(new Error("NOT_FOUND", "Item not found"));
+        Assert.That(result.ToString(), Is.EqualTo("Error(NOT_FOUND: Item not found)"));
+    }
+
+    [Test]
+    public void tostring_success_null_value()
+    {
+        var result = Result.New<string?>(null);
+        Assert.That(result.ToString(), Is.EqualTo("Success()"));
+    }
+
+    #endregion
 }

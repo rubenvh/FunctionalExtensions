@@ -284,6 +284,9 @@ public readonly struct Either<TLeft, TRight>
         return !_isLeft;
     }
 
+    public override string ToString() =>
+        _isLeft ? $"Left({LValue})" : $"Right({Value})";
+
     public static implicit operator Either<TLeft, TRight>(TLeft left) => Left(left);
     public static implicit operator Either<TLeft, TRight>(TRight right) => Right(right);
 

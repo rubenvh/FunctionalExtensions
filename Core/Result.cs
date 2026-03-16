@@ -408,6 +408,9 @@ public readonly struct Result<T>
     public Result<T> WithValidationMessages(params ValidationMessage[] messages) => new(this, (messages ?? Array.Empty<ValidationMessage>()).Concat(ValidationMessages ?? Array.Empty<ValidationMessage>()).ToArray());
   
 
+    public override string ToString() =>
+        _isError ? $"Error({Error!.ErrorIdentifier}: {Error.ErrorMessage})" : $"Success({Value})";
+
     public static implicit operator Result<T>(Error e) => (new Result<T>(e)).WithValidationMessages(e.ToValidationMessage());
     public static implicit operator Result<T>(T v) => new(v);
     public static implicit operator Result<T>((T v, ValidationMessage[] m) _) => new(_.v, _.m);

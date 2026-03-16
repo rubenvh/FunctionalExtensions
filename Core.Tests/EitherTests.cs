@@ -448,4 +448,36 @@ public class EitherTests
     }
 
     #endregion
+
+    #region ToString
+
+    [Test]
+    public void tostring_right_shows_right_value()
+    {
+        var e = Either.Right<string, int>(42);
+        Assert.That(e.ToString(), Is.EqualTo("Right(42)"));
+    }
+
+    [Test]
+    public void tostring_left_shows_left_value()
+    {
+        var e = Either.Left<string, int>("error");
+        Assert.That(e.ToString(), Is.EqualTo("Left(error)"));
+    }
+
+    [Test]
+    public void tostring_left_of_null_shows_left_null()
+    {
+        var e = Either.Left<string?, int>(null);
+        Assert.That(e.ToString(), Is.EqualTo("Left()"));
+    }
+
+    [Test]
+    public void tostring_right_of_null_shows_right_null()
+    {
+        var e = Either.Right<int, string?>(null);
+        Assert.That(e.ToString(), Is.EqualTo("Right()"));
+    }
+
+    #endregion
 }
