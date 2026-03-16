@@ -244,6 +244,44 @@ public static class Result
         Func<Error, Task> action) => await (await result).DoError(action);
 
     /// <summary>
+    /// Conditionally executes an action on a successful Result's value.
+    /// Short-circuits on error. If the Result is successful and the predicate returns true,
+    /// the action is executed. Returns the unmodified result in all cases.
+    /// </summary>
+    /// <param name="result">the result on which to execute</param>
+    /// <param name="predicate">predicate to evaluate on the successful value</param>
+    /// <param name="action">action to execute when the predicate is true</param>
+    /// <typeparam name="T">the type of the successful value</typeparam>
+    /// <returns>the unmodified result</returns>
+    public static Result<T> DoWhen<T>(this Result<T> result, Func<T, bool> predicate, Action<T> action)
+    {
+        if (result.MatchSuccess(out var success) && predicate(success)) action(success);
+        return result;
+    }
+
+    /// <summary>
+    /// Async DoWhen: sync Result, async action.
+    /// </summary>
+    public static async Task<Result<T>> DoWhen<T>(this Result<T> result,
+        Func<T, bool> predicate, Func<T, Task> action)
+    {
+        if (result.MatchSuccess(out var success) && predicate(success)) await action(success);
+        return result;
+    }
+
+    /// <summary>
+    /// Async DoWhen: async Result, sync action.
+    /// </summary>
+    public static async Task<Result<T>> DoWhen<T>(this Task<Result<T>> result,
+        Func<T, bool> predicate, Action<T> action) => (await result).DoWhen(predicate, action);
+
+    /// <summary>
+    /// Async DoWhen: async Result, async action.
+    /// </summary>
+    public static async Task<Result<T>> DoWhen<T>(this Task<Result<T>> result,
+        Func<T, bool> predicate, Func<T, Task> action) => await (await result).DoWhen(predicate, action);
+
+    /// <summary>
     /// Binds a function over a Result. Note that this function won't do anything on an erroneous Result.
     /// The difference with <see cref="Map{T,TResult}(FluentSolidity.FunctionalExtensions.Result{T},System.Func{T,TResult})"/>
     /// defined above, is that Bind should be used with mapping functions returning <see cref="Result{T}"/>
