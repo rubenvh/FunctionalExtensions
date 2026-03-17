@@ -1,14 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{61120109-0289-4FE7-B4DA-BAEFB0B8022A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSolidity.FunctionalExtensions", "FluentSolidity.FunctionalExtensions\FluentSolidity.FunctionalExtensions.csproj", "{61120109-0289-4FE7-B4DA-BAEFB0B8022A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Tests", "Core.Tests\Core.Tests.csproj", "{AA83AC6F-BA9F-488C-A924-D82C349C71C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentSolidity.FunctionalExtensions.Tests", "FluentSolidity.FunctionalExtensions.Tests\FluentSolidity.FunctionalExtensions.Tests.csproj", "{AA83AC6F-BA9F-488C-A924-D82C349C71C3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{8922EBF0-0AE7-4F9C-82FF-D4AEE845A026}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".doc", ".doc", "{AF316D93-9E9D-441C-8831-37C1E66BE283}"
 	ProjectSection(SolutionItems) = preProject
-		.doc\code-review.md = .doc\code-review.md
+		.doc\RESULT_API.md = .doc\RESULT_API.md
 	EndProjectSection
 EndProject
 Global
